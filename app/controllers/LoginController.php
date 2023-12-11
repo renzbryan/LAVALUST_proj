@@ -2,102 +2,127 @@
 defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
 
 class LoginController extends Controller {
-    public function __construct() {
+
+    public function __construct(){
         parent::__construct();
-        $this->call->library('Lauth');
-        $this->call->model('email');
-        $this->call->library('session');
-        $this->call->library('form_validation');
-        $this->call->library('upload');
+        // $this->call->library('session');
+        $this->getusers = $this->User_model->getusers();
     }
-    public function login(){
-        if ($this->form_validation->submitted()) {
-            $this->form_validation
-            ->name('username')
-                ->required()
-            ->name('email')
-                ->required()
-            ->name('password')
-                ->required();
-            if ($this->form_validation->run()) {    
-                if($this->Lauth->is_user_verified($this->io->post('username'))){
-                $login=$this->Lauth->login($this->io->post('email'),$this->io->post('password'));
-                if ($login) {
-                    $this->Lauth->set_logged_in($login);
-                    if ($this->Lauth->is_logged_in()) {
-                        redirect('/user');
+	public function login(){
+        return $this->call->view('login');
+    }
+	public function register(){
+        return $this->call->view('register');
+    }
+	public function upload(){
+        return $this->call->view('upload_form');
+    }
+    
+    // public function logout() {
+    //     $this->session->unset_userdata('userEmail');
+
+    //     redirect('login');
+    // }
+    
+    public function create() {
+        $email = $this->io->post('email');
+        $password = $this->io->post('password');
+        $data = array(
+            "email" => $email,
+            "password"=> password_hash($password,PASSWORD_DEFAULT),
+            "status" => "unverified",
+        );
+        $this->User_model->addUser($data);
+        redirect('login');
+    }
+    public function auth() {
+        $email = $this->io->post('email');
+        $password = $this->io->post('password');
+        
+        $users = $this->getusers;
+        foreach ($users as $user) {
+            if ($email == $user['email']) {
+                if (password_verify($password, $user['password'])) {
+                    if($user['status'] == "unverified")
+                    {
+                        $recepient_email = $email;
+                        $subject = "Email Verification";
+                        $content = "click the link to verify <a href='" . site_url("pending") . "/" . $user['id'] . "'>Link</a>";
+                        $this->sendVerify($recepient_email,$subject,$content);
+                        
+                        $this->call->view('unverified');
+                        return;
+                    } else {
+                        $this->session->set_userdata('userEmail', $user['email']);
+                        $data['email'] = $this->session->userdata('userEmail');
+                        $this->call->view('verified',$data);
+                        return;
                     }
-                    }
-  
-                }
-                else {
-                    $data['error_message'] = 'Email is not registered/it does not exist'; 
-                    $this->call->view('login',$data);
+                } else {
+                    redirect('login');
+                    return;
                 }
             }
         }
-        $this->call->view('login');
+        redirect('login');
     }
 
-    public function sendEmailVerify($add,$verify_token,$user){
-        $mail = new PHPMailer(true);
-                    try {
-                        //Server settings
-                        //$mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-                        $mail->isSMTP();                                            //Send using SMTP
-                        $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
-                        $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-                        $mail->Username   = 'justinepogi2703@gmail.com';                     //SMTP username
-                        $mail->Password   = 'qerd fzmt waeh bave';                               //SMTP password
-                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;            //Enable implicit TLS encryption
-                        $mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
-                        $mail->setFrom('justinepogi2703@gmail.com','Administrator');
-                        $mail->addAddress($add);    
-                        //Content
-                        $mail->isHTML(true);                                 //Set email format to HTML
-                        $mail->Subject = "Hello, $user Email Verfication for Activity of Justine Maderazo";
-                        $mail->Body    = "
-                        <h2>You have registered on the website</h2>
-                        <h5>Verify your email address to login with the given link below</h5>
-                        <br/><br/>
-                        <a href='http://localhost/LAVAACT/verify-email?token=$verify_token'>Verify Now</a>
-                        ";
-                        $mail->send();
-
-                    } catch (Exception $e) {
-                        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
-                    }
-    }
-
-    public function verifyEmail(){
-        if ($this->Lauth->verify_now($_GET['token'])) {
-           echo 'user is successfully verified';
-        }
-        else {
-            echo'Token does not exist';
-            redirect('/register');
+    public function pending($id)
+    {
+        $data = $this->User_model->searchUser($id);
+        $data['status'] = "verified";
+        if($data['status'] == "verified")
+        {
+            $this->User_model->updateToken($id,$data);
+            $this->session->set_userdata('userEmail', $data['email']);
+            $this->call->view('verified',$data);
+        } else {
+            $this->call->view('unverified');
         }
     }
 
-	public function register() {
-		if ($this->form_validation->submitted()) {
-            $this->form_validation
-            ->name('name')
-                ->required()
-            ->name('email')
-                ->required()
-            ->name('password')
-                ->required();
-                $token=md5(rand());
-            if ($this->form_validation->run()) {                
-                $this->Lauth->register($this->io->post('name'),$this->io->post('email'),$this->io->post('password'),$token);
-                $this->sendEmailVerify($this->io->post('email'),$token,$this->io->post('name'));
-                
-                    redirect('/register');
-                    echo 'Email Registration Success';
-                }
-        }
-        $this->call->view('register');
-	}
+    public function sendVerify($recepient_email,$subject,$content)
+    {
+        $this->email->sender('rnztby19@gmail.com', 'Lavalust Activity'); 
+        $this->email->recipient($recepient_email);
+        $this->email->subject($subject);
+        $this->email->email_content($content,"html");
+        $this->email->send();
+    }
+
+    Public function uploadFile(){
+        $this->call->library('upload', $_FILES["fileToUpload"]);
+		$this->upload
+			->set_dir('public')
+			->allowed_extensions(array('jpg'))
+			->allowed_mimes(array('image/jpeg'))
+			->is_image();
+		If($this->upload->do_upload()) {
+			$data['filename'] = $this->upload->get_filename();
+            
+            $email = $this->io->post('email');
+            $name = $this->io->post('name');
+            $subject = $this->io->post('subject');
+            $content = $this->io->post('content');
+            $path = "public/" . $this->upload->get_filename();
+            $this->send($email, $name, $subject, $content, $path);
+			echo 'Upload successful';
+		} else {
+			$data['errors'] = $this->upload->get_errors();
+			$this->call->view('error', $data);   
+		}
+    }
+
+    Public function send($email,$name,$subject,$content,$path)
+    {
+        $fullContent = "Hello, <br><br>This is a sample email.<br>These are the email's contents: <br>" . $content; 
+        $this->email->recipient($email);
+        $this->email->sender($this->session->userdata('userEmail'), $name);
+
+        $this->email->subject($subject);
+        $this->email->email_content($fullContent,'html');
+        $this->email->attachment($path);
+        $this->email->send();
+    }
 }
-?>
+

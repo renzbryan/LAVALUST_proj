@@ -2,7 +2,7 @@
 			<div class="sidebar-inner slimscroll">
 				<div id="sidebar-menu" class="sidebar-menu">
 					<ul>
-					<li class="submenu"> <a href=""><i class="fas fa-suitcase"></i> <span> Home </span> <span class="menu-arrow"></span></a>
+					<li> <a href="/view-products"><i class="fas fa-suitcase"></i> <span> Home </span> <span class="menu-arrow"></span></a></li>
 						<li class="submenu"> <a href=""><i class="fas fa-suitcase"></i> <span> Orders </span> <span class="menu-arrow"></span></a>
 							<ul class="submenu_class" style="display: none;">
 								<li><a href="<?=site_url('/user-add-order')?>"> Add Order </a></li>

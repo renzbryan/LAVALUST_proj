@@ -1,13 +1,24 @@
 <?php
 defined('PREVENT_DIRECT_ACCESS') or exit('No direct script access allowed');
 
+
 class ProdController extends Controller
 {
+    public function __construct() 
+{
+parent:: __construct();
+$this->call->model('ProdModel');
+}
+
+public function userProduct(){
+    $data = $this->ProdModel->select_all();
+    $this->call->view('show', $data);
+}
     //FIRST ADDED
     public function index() 
     {
         $this->call->model('ProdModel');
-        $data['info'] = $this->ProdModel->getInfo();
+        $data['info'] = $this->ProdModel->select_all();
         return $this->call->view('ProductRecords',$data);
     }
     
@@ -15,7 +26,7 @@ class ProdController extends Controller
     public function add_prod() 
     {
         $this->call->model('ProdModel');
-        $data['info'] = $this->ProdModel->getInfo();
+        $data['info'] = $this->ProdModel->select_all();
         return $this->call->view('add_prod', $data);
     }
 
@@ -37,4 +48,6 @@ class ProdController extends Controller
 
         redirect('/ProductRecords'); 
     }
+
+
 }

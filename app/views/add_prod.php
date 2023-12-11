@@ -14,17 +14,19 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            
         }
 
         .container {
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            padding: 40px; /* Increased padding for the form */
+            width:100vh;
         }
 
         .product-form {
-            max-width: 400px;
+            max-width: 500px; /* Increased max-width for the form */
             margin: 0 auto;
         }
 
@@ -35,12 +37,12 @@
         h3 {
             color: #343a40;
             font-size: 1.5em;
-            margin-bottom: 10px;
+            margin-bottom: 20px; /* Increased margin for the heading */
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 10px; /* Increased margin for labels */
             color: #495057;
         }
 
@@ -75,10 +77,12 @@
             background-color: #6c757d;
             color: #fff;
             margin-right: 10px;
+            text-decoration: none; /* Removed underlined text decoration */
+            display: inline-block; /* Displayed as inline block to remove line break */
         }
 
         .cancel-button:hover {
-            background-color: #495057;
+            background-color: red;
         }
     </style>
 </head>

@@ -65,5 +65,19 @@ $router->post('save', 'ProdController::add');
 // $router->post('/add_prod', 'ProdController::add');
 
 $router->post('ProdController/add', 'ProdController::add');
+$router->get('view-products', 'ProdController::userProduct');
 
 $router->get('user-home', 'UserController::home');
+
+
+
+//login
+$router->get('/', 'LoginController::login');
+$router->get('/login', 'LoginController::login');
+$router->post('/auth', 'LoginController::auth');
+$router->get('/register', 'LoginController::register');
+$router->post('/create', 'LoginController::create');
+
+$router->get('/logout', 'LoginController::logout');
+$router->get('/pending/(:num)', 'LoginController::pending');
+$router->post('/upload', 'LoginController::uploadFile'); 

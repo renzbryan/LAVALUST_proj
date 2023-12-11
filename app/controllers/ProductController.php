@@ -73,6 +73,50 @@ class ProductController extends Controller {
       }
     }
 
+    public function index() 
+    {
+        $this->call->model('Product_model');
+        $data['info'] = $this->ProdModel->getInfo();
+        return $this->call->view('ProductRecords',$data);
+    }
+    
+    //connection for add form
+    public function add_prod() 
+    {
+        $this->call->model('Product_model');
+        $data['info'] = $this->ProdModel->getInfo();
+        return $this->call->view('add_prod', $data);
+    }
+
+    public function add()
+    {
+        // Ensure the form is submitted
+        if ($this->io->post('add_product')) {
+            // Get input data
+            $prodname = $this->io->post('prodname');
+            $description = $this->io->post('description');
+            $price = $this->io->post('price');
+            $stocks = $this->io->post('stocks');
+
+            // Prepare data for insertion
+            $bind = array(
+                "prodname" => $prodname,
+                "description" => $description,
+                "price" => $price,
+                "stocks" => $stocks
+            );
+
+            // Insert data into the 'prod' table
+            $this->db->table('prod')->insert($bind);
+
+            // Redirect to the product records page
+            redirect('/ProductRecords');
+        } else {
+            // Form not submitted, handle accordingly (e.g., show error)
+            // You might want to add error handling or redirect to another page
+            echo "Form not submitted.";
+        }
+    }
 
 }
 ?>
